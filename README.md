@@ -4,6 +4,10 @@
 
 ## [Installation](https://neovim.io/doc/install/)
 
+## Dependencies
+- Depends on [vim-plug](https://github.com/junegunn/vim-plug)
+- Theme on [catppuccin](https://github.com/catppuccin/nvim)
+
 #### Make a backup of your current nvim and shared folder
 
 - For linux
