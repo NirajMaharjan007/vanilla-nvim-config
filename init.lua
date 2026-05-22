@@ -3,6 +3,7 @@ local Plug = vim.fn['plug#']
 
 vim.call('plug#begin', '~/.vim/plugged')
 
+Plug('mason-org/mason.nvim')
 Plug('dense-analysis/ale')
 Plug('mattn/emmet-vim')
 Plug('neoclide/coc.nvim', { ['branch'] = 'release' })
@@ -20,11 +21,22 @@ Plug('rafi/awesome-vim-colorschemes')
 Plug('vim-airline/vim-airline')
 Plug('Yggdroot/indentLine')
 Plug('HerringtonDarkholme/yats.vim')
+Plug ('sheerun/vim-polyglot')
 Plug('tomasiser/vim-code-dark')
+Plug('frazrepo/vim-rainbow')
 Plug('catppuccin/nvim', { ['as'] = 'catppuccin' })
 
 vim.call('plug#end')
 
+require("mason").setup({
+    ui = {
+        icons = {
+            package_installed = "✓",
+            package_pending = "➜",
+            package_uninstalled = "✗"
+        }
+    }
+})
 -- BASIC SETTINGS
 vim.opt.mouse = 'a'
 vim.opt.number = true
@@ -48,7 +60,7 @@ vim.opt.laststatus = 2
 vim.cmd.colorscheme("catppuccin-mocha")
 
 -- KEYMAPS
-vim.keymap.set('i', 'jk', '<ESC>')
+--vim.keymap.set('i', 'jk', '<ESC>')
 vim.keymap.set('n', '<C-n>', ':NERDTreeToggle<CR>')
 vim.keymap.set('v', '++', '<plug>NERDCommenterToggle')
 vim.keymap.set('n', '++', '<plug>NERDCommenterToggle')
@@ -162,3 +174,36 @@ vim.g.ale_linters = {
     python = { 'flake8', 'pylint' },
     javascript = { 'eslint' },
 }
+
+vim.g.airline_theme="onedark"
+
+vim.diagnostic.config({
+    virtual_text = true,
+    signs = true,
+    underline = true,
+    update_in_insert = false,
+    severity_sort = true,
+})
+
+vim.g.ale_sign_error = ''
+vim.g.ale_sign_warning = ''
+vim.g.ale_sign_info = ''
+vim.g.ale_lint_on_text_changed = 'always'
+vim.g.ale_lint_on_insert_leave = 1
+vim.g.ale_set_highlights = 1
+vim.g.ale_fix_on_save = 1
+
+vim.cmd([[
+highlight DiagnosticUnderlineError gui=undercurl guisp=#ff0000
+highlight DiagnosticUnderlineWarn gui=undercurl guisp=#ffaa00
+highlight DiagnosticUnderlineInfo gui=undercurl guisp=#00aaff
+highlight DiagnosticUnderlineHint gui=undercurl guisp=#00ff99
+]])
+
+vim.diagnostic.config({
+    virtual_text = true,
+    signs = true,
+    underline = true,
+    update_in_insert = false,
+})
+
