@@ -21,9 +21,11 @@ Plug('rafi/awesome-vim-colorschemes')
 Plug('vim-airline/vim-airline')
 Plug('Yggdroot/indentLine')
 Plug('HerringtonDarkholme/yats.vim')
-Plug ('sheerun/vim-polyglot')
+Plug('sheerun/vim-polyglot')
 Plug('tomasiser/vim-code-dark')
 Plug('frazrepo/vim-rainbow')
+Plug('ryanoasis/vim-devicons')
+Plug('stevearc/conform.nvim')
 Plug('catppuccin/nvim', { ['as'] = 'catppuccin' })
 
 vim.call('plug#end')
@@ -37,6 +39,42 @@ require("mason").setup({
         }
     }
 })
+
+require("conform").setup({
+    formatters_by_ft = {
+        lua = { "stylua" },
+        python = { "black" },
+        javascript = { "prettier" },
+        typescript = { "prettier" },
+        json = { "prettier" },
+        cs = { "csharpier" },
+        -- Add more as needed
+    },
+
+    format_on_save = {
+        timeout_ms = 1000,
+        lsp_fallback = true, -- Use LSP formatting if no formatter found
+    },
+})
+
+
+vim.g.rainbow_active = 1
+
+vim.g.rainbow_guifgs = {
+    'RoyalBlue3',
+    'DarkOrange3',
+    'DarkOrchid3',
+    'FireBrick'
+}
+
+vim.g.rainbow_ctermfgs = {
+    'lightblue',
+    'lightgreen',
+    'yellow',
+    'red',
+    'magenta'
+}
+
 -- BASIC SETTINGS
 vim.opt.mouse = 'a'
 vim.opt.number = true
@@ -175,7 +213,7 @@ vim.g.ale_linters = {
     javascript = { 'eslint' },
 }
 
-vim.g.airline_theme="onedark"
+vim.g.airline_theme = "onedark"
 
 vim.diagnostic.config({
     virtual_text = true,
@@ -206,4 +244,3 @@ vim.diagnostic.config({
     underline = true,
     update_in_insert = false,
 })
-
