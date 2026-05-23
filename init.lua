@@ -131,6 +131,18 @@ require("nvim-tree").setup({
     },
 })
 
+vim.api.nvim_create_autocmd("FileType", {
+    pattern = "dashboard",
+    callback = function()
+        vim.opt_local.statuscolumn = "" -- Remove the column with `|`
+        vim.opt_local.signcolumn = "no" -- Also remove sign column
+        vim.cmd [[highlight EndOfBuffer guifg=bg]]
+    end,
+})
+
+vim.g.indentLine_fileTypeExclude = { 'dashboard' }
+vim.g.indentLine_bufTypeExclude = { 'terminal', 'nofile' }
+
 
 require('dashboard').setup({
     theme = 'doom',
