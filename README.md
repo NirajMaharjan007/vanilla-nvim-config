@@ -7,6 +7,7 @@
 ## Dependencies
 - Depends on [vim-plug](https://github.com/junegunn/vim-plug)
 - Theme on [catppuccin](https://github.com/catppuccin/nvim)
+- Font based on any *Your Choice* [Nerd Font](https://www.nerdfonts.com/font-downloads)
 
 #### Make a backup of your current nvim and shared folder
 
