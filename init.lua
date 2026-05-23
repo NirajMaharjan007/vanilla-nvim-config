@@ -1,13 +1,23 @@
 local vim = vim
 local Plug = vim.fn['plug#']
 
+-- disable netrw at the very start of your init.lua
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
+
+-- optionally enable 24-bit colour
+vim.opt.termguicolors = true
+
+vim.api.nvim_exec_autocmds("User", { pattern = "PluginsLoaded" })
+
+
 vim.call('plug#begin', '~/.vim/plugged')
 
 Plug('mason-org/mason.nvim')
 Plug('dense-analysis/ale')
 Plug('mattn/emmet-vim')
 Plug('neoclide/coc.nvim', { ['branch'] = 'release' })
-Plug('preservim/nerdtree')
+Plug('nvim-tree/nvim-tree.lua')
 Plug('Xuyuanp/nerdtree-git-plugin')
 Plug('tiagofumo/vim-nerdtree-syntax-highlight')
 Plug('ryanoasis/vim-devicons')
@@ -26,9 +36,36 @@ Plug('tomasiser/vim-code-dark')
 Plug('frazrepo/vim-rainbow')
 Plug('ryanoasis/vim-devicons')
 Plug('stevearc/conform.nvim')
+Plug('lambdalisue/vim-nerdfont')
+Plug('nvim-lua/plenary.nvim')
+Plug('nvimdev/dashboard-nvim')
+Plug('nvim-tree/nvim-web-devicons')
+Plug('folke/trouble.nvim')
+Plug('folke/snacks.nvim')
+Plug('nvim-telescope/telescope.nvim')
+Plug('folke/edgy.nvim')
 Plug('catppuccin/nvim', { ['as'] = 'catppuccin' })
 
 vim.call('plug#end')
+
+package.preload['lazy.stats'] = function()
+    return {
+        status = function() return {} end,
+        -- Add other mock functions as needed
+    }
+end
+
+require('telescope').setup({
+    defaults = {
+        file_ignore_patterns = { "node_modules", ".git" },
+        layout_strategy = "horizontal",
+        layout_config = {
+            width = 0.8,
+            height = 0.8,
+        },
+    },
+    extensions = {},
+})
 
 require("mason").setup({
     ui = {
@@ -57,6 +94,76 @@ require("conform").setup({
     },
 })
 
+require("snacks").setup({
+    dashboard = { enabled = false },
+    bigfile = { enabled = true },
+    explorer = { enabled = true },
+    indent = { enabled = true },
+    input = { enabled = true },
+    picker = { enabled = true },
+    notifier = { enabled = true },
+    quickfile = { enabled = true },
+    scope = { enabled = true },
+    scroll = { enabled = true },
+    statuscolumn = { enabled = true },
+    words = { enabled = true },
+})
+
+require("nvim-tree").setup({
+    -- Your config options
+    view = {
+        width = 30,
+        side = "left",
+    },
+    renderer = {
+        icons = {
+            show = {
+                file = true,
+                folder = true,
+                folder_arrow = true,
+                git = true,
+            },
+        },
+    },
+    update_focused_file = {
+        enable = true,
+        update_cwd = true,
+    },
+})
+
+
+require('dashboard').setup({
+    theme = 'doom',
+    config = {
+        header = {
+            "",
+            "     ███╗   ██╗███████╗ ██████╗ ██╗   ██╗██╗███╗   ███╗",
+            "     ████╗  ██║██╔════╝██╔═══██╗██║   ██║██║████╗ ████║",
+            "     ██╔██╗ ██║█████╗  ██║   ██║██║   ██║██║██╔████╔██║",
+            "     ██║╚██╗██║██╔══╝  ██║   ██║╚██╗ ██╔╝██║██║╚██╔╝██║",
+            "     ██║ ╚████║███████╗╚██████╔╝ ╚████╔╝ ██║██║ ╚═╝ ██║",
+            "     ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝",
+        },
+        vertical_center = true,
+        center = {
+            { icon = "  ", desc = " New File", action = "ene" },
+            { icon = "  ", desc = " Find File", action = "Telescope find_files" },
+            { icon = "  ", desc = " Find Word", action = "Telescope live_grep" },
+            { icon = "  ", desc = " Recent Files", action = "Telescope oldfiles" },
+            { icon = " 󰒲 ", desc = " Mason", action = "Mason" },
+            { icon = "  ", desc = " Quit", action = "qa" },
+        },
+        footer = {
+            "",
+            "   Niraj Maharjan     vanilla-nvim-config",
+            "   github.com/NirajMaharjan007/vanilla-nvim-config",
+            "",
+        },
+    }
+})
+
+require("edgy").setup()
+require("trouble").setup()
 
 vim.g.rainbow_active = 1
 
@@ -95,11 +202,11 @@ vim.opt.signcolumn = 'yes'
 vim.opt.laststatus = 2
 
 -- vim.cmd('colorscheme codedark')
-vim.cmd.colorscheme("catppuccin-mocha")
+vim.cmd.colorscheme("catppuccin")
 
 -- KEYMAPS
 --vim.keymap.set('i', 'jk', '<ESC>')
-vim.keymap.set('n', '<C-n>', ':NERDTreeToggle<CR>')
+vim.keymap.set('n', '<C-n>', ':NvimTreeToggle<CR>')
 vim.keymap.set('v', '++', '<plug>NERDCommenterToggle')
 vim.keymap.set('n', '++', '<plug>NERDCommenterToggle')
 
@@ -114,35 +221,6 @@ vim.keymap.set('n', '<C-x>', ':bp | bd #<CR>')
 vim.keymap.set('n', 'j', "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
 vim.keymap.set('n', 'k', "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
 
--- NERDTREE
-vim.g.NERDTreeGitStatusWithFlags = 1
-vim.g.NERDTreeIgnore = { '^node_modules$' }
-
-vim.api.nvim_create_autocmd('VimEnter', {
-    callback = function()
-        vim.cmd('NERDTree')
-    end
-})
-
-function _G.IsNERDTreeOpen()
-    return vim.t.NERDTreeBufName ~= nil and vim.fn.bufwinnr(vim.t.NERDTreeBufName) ~= -1
-end
-
-function _G.SyncTree()
-    if vim.bo.modifiable
-        and IsNERDTreeOpen()
-        and vim.fn.expand('%') ~= ''
-        and not vim.wo.diff then
-        vim.cmd('NERDTreeFind')
-        vim.cmd('wincmd p')
-    end
-end
-
-vim.api.nvim_create_autocmd('BufEnter', {
-    callback = function()
-        SyncTree()
-    end
-})
 
 -- CTRLP
 vim.g.ctrlp_user_command = {
