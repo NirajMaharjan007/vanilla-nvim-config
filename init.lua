@@ -13,7 +13,16 @@ vim.api.nvim_exec_autocmds("User", { pattern = "PluginsLoaded" })
 
 vim.call('plug#begin', '~/.vim/plugged')
 
+Plug('neovim/nvim-lspconfig')
+Plug('hrsh7th/cmp-nvim-lsp')
+Plug('hrsh7th/cmp-buffer')
+Plug('hrsh7th/cmp-path')
+Plug('hrsh7th/cmp-cmdline')
+Plug('hrsh7th/nvim-cmp')
+
 Plug('mason-org/mason.nvim')
+Plug('mason-org/mason-lspconfig.nvim')
+
 Plug('dense-analysis/ale')
 Plug('mattn/emmet-vim')
 Plug('neoclide/coc.nvim', { ['branch'] = 'release' })
@@ -28,7 +37,8 @@ Plug('christoomey/vim-tmux-navigator')
 Plug('sheerun/vim-polyglot')
 Plug('morhetz/gruvbox')
 Plug('rafi/awesome-vim-colorschemes')
-Plug('vim-airline/vim-airline')
+Plug('nvim-lualine/lualine.nvim')
+Plug('SmiteshP/nvim-navic')
 Plug('Yggdroot/indentLine')
 Plug('HerringtonDarkholme/yats.vim')
 Plug('sheerun/vim-polyglot')
@@ -55,6 +65,84 @@ package.preload['lazy.stats'] = function()
     }
 end
 
+local cmp = require('cmp')
+
+cmp.setup({
+    snippet = {
+        -- REQUIRED - you must specify a snippet engine
+        expand = function(args)
+            vim.snippet.expand(args.body)            -- For native neovim snippets (Neovim v0.10+)
+            vim.fn["vsnip#anonymous"](args.body)     -- For `vsnip` users.
+            require('luasnip').lsp_expand(args.body) -- For `luasnip` users.
+            -- require('snippy').expand_snippet(args.body) -- For `snippy` users.
+            -- vim.fn["UltiSnips#Anon"](args.body) -- For `ultisnips` users.
+
+            -- For `mini.snippets` users:
+            -- local insert = MiniSnippets.config.expand.insert or MiniSnippets.default_insert
+            -- insert({ body = args.body }) -- Insert at cursor
+            -- cmp.resubscribe({ "TextChangedI", "TextChangedP" })
+            -- require("cmp.config").set_onetime({ sources = {} })
+        end,
+    },
+    window = {
+        -- completion = cmp.config.window.bordered(),
+        -- documentation = cmp.config.window.bordered(),
+    },
+    mapping = cmp.mapping.preset.insert({
+        -- This makes Enter confirm selection instead of adding new line
+        ['<CR>'] = cmp.mapping.confirm({ select = true }),
+        -- Keep Tab for normal completion cycling
+        ['<Tab>'] = cmp.mapping.select_next_item(),
+        ['<S-Tab>'] = cmp.mapping.select_prev_item(), -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
+    }),
+    sources = cmp.config.sources({
+        { name = 'nvim_lsp' },
+        { name = 'luasnip' },
+        { name = 'path' },
+        -- { name = 'buffer' },
+        { name = 'vsnip' },
+    }, {
+        { name = 'buffer' },
+    })
+})
+
+-- To use git you need to install the plugin petertriho/cmp-git and uncomment lines below
+-- Set configuration for specific filetype.
+--[[ cmp.setup.filetype('gitcommit', {
+   sources = cmp.config.sources({
+     { name = 'git' },
+   }, {
+     { name = 'buffer' },
+   })
+})
+require("cmp_git").setup() ]] --
+
+-- Use buffer source for `/` and `?` (if you enabled `native_menu`, this won't work anymore).
+cmp.setup.cmdline({ '/', '?' }, {
+    mapping = cmp.mapping.preset.cmdline(),
+    sources = {
+        { name = 'buffer' }
+    }
+})
+
+-- Use cmdline & path source for ':' (if you enabled `native_menu`, this won't work anymore).
+cmp.setup.cmdline(':', {
+    mapping = cmp.mapping.preset.cmdline(),
+    sources = cmp.config.sources({
+        { name = 'path' }
+    }, {
+        { name = 'cmdline' }
+    }),
+    matching = { disallow_symbol_nonprefix_matching = false }
+})
+
+-- Set up lspconfig.
+local capabilities = require('cmp_nvim_lsp').default_capabilities()
+-- Replace <YOUR_LSP_SERVER> with each lsp server you've enabled.
+vim.lsp.config('<YOUR_LSP_SERVER>', {
+    capabilities = capabilities
+})
+
 require('telescope').setup({
     defaults = {
         file_ignore_patterns = { "node_modules", ".git" },
@@ -75,6 +163,103 @@ require("mason").setup({
             package_uninstalled = "✗"
         }
     }
+})
+
+vim.lsp.config('lua_ls', {
+    cmd = { 'lua-language-server' },
+    filetypes = { 'lua' },
+    settings = {
+        Lua = {
+            runtime = { version = 'LuaJIT' },
+            diagnostics = { globals = { 'vim' } }
+        }
+    }
+})
+
+vim.lsp.config('pyright', {
+    cmd = { 'pyright-langserver', '--stdio' },
+    filetypes = { 'python' }
+})
+
+vim.lsp.config('csharp-ls', {
+    cmd = { 'csharp-ls' },
+    filetypes = { 'cs' },
+    -- This tries .sln FIRST, then falls back to .csproj
+    root_dir = function(fname)
+        local root = vim.fs.root(fname, function(name)
+            return name:match('%.sln$') ~= nil
+        end)
+        if root then return root end
+
+        root = vim.fs.root(fname, function(name)
+            return name:match('%.csproj$') ~= nil
+        end)
+        return root
+    end,
+})
+
+vim.lsp.config('omnisharp', {
+    cmd = { 'OmniSharp', '--languageserver' },
+    filetypes = { 'cs' },
+    root_dir = vim.fs.root(0, function(name)
+        return name:match('%.sln$') ~= nil or name:match('%.csproj$') ~= nil
+    end),
+    settings = {
+        FormattingOptions = {
+            EnableEditorConfigSupport = true,
+            OrganizeImports = true,
+        },
+        MsBuild = {
+            LoadProjectsOnDemand = true,
+        },
+        RoslynExtensionsOptions = {
+            EnableAnalyzersSupport = true,
+            EnableImportCompletion = true,
+            AnalyzeOpenDocumentsOnly = true,
+        },
+        Sdk = {
+            IncludePrereleases = true,
+        },
+    },
+})
+
+vim.lsp.enable('csharp-ls')
+vim.lsp.enable('omnisharp')
+
+vim.lsp.enable('pyright')
+vim.lsp.enable('lua_ls')
+
+require("mason-lspconfig").setup({
+    -- List of language servers you want automatically installed
+    ensure_installed = { "lua_ls", "ts_ls", "pyright" },
+    automatic_installation = true, -- Installs servers when you open a matching file
+})
+
+
+
+-- Keymaps
+vim.api.nvim_create_autocmd('LspAttach', {
+    callback = function(args)
+        vim.keymap.set('n', 'gd', vim.lsp.buf.definition, { buffer = args.buf })
+        vim.keymap.set('n', 'K', vim.lsp.buf.hover, { buffer = args.buf })
+        vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, { buffer = args.buf })
+        local client = vim.lsp.get_client_by_id(args.data.client_id)
+        if client then
+            -- Attach navic to get breadcrumbs
+            require('nvim-navic').attach(client, args.buf)
+
+            -- Optional: Update breadcrumbs on cursor move
+            vim.api.nvim_create_autocmd('CursorMoved', {
+                buffer = args.buf,
+                callback = function()
+                    vim.cmd('redrawstatus') -- Refresh winbar on cursor move
+                end
+            })
+        end
+        if client and client.name == 'omnisharp' then
+            client.server_capabilities.semanticTokensProvider = nil
+        end
+    end
 })
 
 require("conform").setup({
@@ -108,6 +293,97 @@ require("snacks").setup({
     statuscolumn = { enabled = true },
     words = { enabled = true },
 })
+
+require('lualine').setup {
+    options = {
+        icons_enabled = true,
+        theme = 'auto',
+        component_separators = { left = '', right = '' },
+        section_separators = { left = '', right = '' },
+        disabled_filetypes = {
+            statusline = {},
+            winbar = {},
+        },
+        ignore_focus = {},
+        always_divide_middle = true,
+        always_show_tabline = true,
+        globalstatus = false,
+        refresh = {
+            statusline = 1000,
+            tabline = 1000,
+            winbar = 1000,
+            refresh_time = 16, -- ~60fps
+            events = {
+                'WinEnter',
+                'BufEnter',
+                'BufWritePost',
+                'SessionLoadPost',
+                'FileChangedShellPost',
+                'VimResized',
+                'Filetype',
+                'CursorMoved',
+                'CursorMovedI',
+                'ModeChanged',
+            },
+        }
+    },
+
+    sections = {
+        lualine_a = { 'mode' },
+        lualine_b = { 'branch', 'diff', 'diagnostics' },
+        lualine_c = { 'filename' },
+        lualine_x = { 'encoding', 'fileformat', 'filetype' },
+        lualine_y = { 'progress' },
+        lualine_z = { 'location' }
+    },
+    inactive_sections = {
+        lualine_a = {},
+        lualine_b = {},
+        lualine_c = { 'filename' },
+        lualine_x = { 'location' },
+        lualine_y = {},
+        lualine_z = {}
+    },
+    tabline = {
+        lualine_c = { { 'tabs', mode = 2, max_length = 40 } }
+    },
+    winbar = {
+        lualine_a = {},
+        lualine_b = {
+            { 'filename', path = 1 } -- Shows "Main.cs" or "Assets/Scripts/Main.cs"
+        },
+        lualine_c = {
+            {
+                function()
+                    local navic = require('nvim-navic')
+                    if navic.is_available() then
+                        local location = navic.get_location()
+                        if location and location ~= '' then
+                            return '   ' .. location -- Arrow separator
+                        end
+                    end
+                    return ''
+                end,
+                cond = function()
+                    return require('nvim-navic').is_available()
+                end
+            }
+        },
+        lualine_x = {},
+        lualine_y = {},
+        lualine_z = { 'location' }
+    },
+    inactive_winbar = {
+        lualine_a = {},
+        lualine_b = { { 'filename' } },
+        lualine_c = {},
+        lualine_x = {},
+        lualine_y = {},
+        lualine_z = {}
+    },
+    extensions = { 'quickfix' }
+}
+
 
 require("nvim-tree").setup({
     -- Your config options
@@ -290,11 +566,6 @@ vim.keymap.set('i', '<S-TAB>', function()
     end
 end, { expr = true })
 
--- AIRLINE
-vim.g.airline_powerline_fonts = 1
-vim.g.airline_theme = 'base16_twilight'
-vim.g['airline#extensions#tabline#enabled'] = 1
-vim.g['airline#extensions#tabline#formatter'] = 'default'
 
 -- ALE
 vim.g.ale_completion_enabled = 0
@@ -302,8 +573,6 @@ vim.g.ale_linters = {
     python = { 'flake8', 'pylint' },
     javascript = { 'eslint' },
 }
-
-vim.g.airline_theme = "onedark"
 
 vim.diagnostic.config({
     virtual_text = true,
