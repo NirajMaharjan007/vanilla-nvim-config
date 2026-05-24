@@ -23,6 +23,7 @@ Plug('hrsh7th/nvim-cmp')
 Plug('mason-org/mason.nvim')
 Plug('mason-org/mason-lspconfig.nvim')
 
+Plug('akinsho/bufferline.nvim')
 Plug('dense-analysis/ale')
 Plug('mattn/emmet-vim')
 Plug('neoclide/coc.nvim', { ['branch'] = 'release' })
@@ -198,33 +199,7 @@ vim.lsp.config('csharp-ls', {
     end,
 })
 
-vim.lsp.config('omnisharp', {
-    cmd = { 'OmniSharp', '--languageserver' },
-    filetypes = { 'cs' },
-    root_dir = vim.fs.root(0, function(name)
-        return name:match('%.sln$') ~= nil or name:match('%.csproj$') ~= nil
-    end),
-    settings = {
-        FormattingOptions = {
-            EnableEditorConfigSupport = true,
-            OrganizeImports = true,
-        },
-        MsBuild = {
-            LoadProjectsOnDemand = true,
-        },
-        RoslynExtensionsOptions = {
-            EnableAnalyzersSupport = true,
-            EnableImportCompletion = true,
-            AnalyzeOpenDocumentsOnly = true,
-        },
-        Sdk = {
-            IncludePrereleases = true,
-        },
-    },
-})
-
 vim.lsp.enable('csharp-ls')
-vim.lsp.enable('omnisharp')
 
 vim.lsp.enable('pyright')
 vim.lsp.enable('lua_ls')
@@ -255,9 +230,6 @@ vim.api.nvim_create_autocmd('LspAttach', {
                     vim.cmd('redrawstatus') -- Refresh winbar on cursor move
                 end
             })
-        end
-        if client and client.name == 'omnisharp' then
-            client.server_capabilities.semanticTokensProvider = nil
         end
     end
 })
@@ -294,6 +266,34 @@ require("snacks").setup({
     words = { enabled = true },
 })
 
+require("bufferline").setup({
+    options = {
+        modified_icon = "●",
+        left_trunc_marker = "",
+        right_trunc_marker = "",
+        -- This is the magic setting: it makes the tabs look like files, not Vim windows [citation:5]
+        mode = "buffers",
+
+        -- Makes the tabs show only the filename, not the whole path
+        show_buffer_icons = true,
+        show_buffer_close_icons = false,
+        show_close_icon = false,
+
+        -- How the tabs look
+        separator_style = "slant",     -- Use "slant" for VS Code's angled separator look
+        always_show_bufferline = true, -- Keeps the bar visible even with one file open
+        diagnostics = "nvim_lsp",      -- Shows LSP error/warning icons on the tabs [citation:3]
+
+        -- This is for VS Code-style tab closing. Bdelete! closes the buffer without breaking the window.
+        -- close_command = "Bdelete! %d",
+        -- right_mouse_command = "Bdelete! %d",
+    }
+})
+-- Key bindings (optional, but nice to have)
+-- These let you switch tabs with Ctrl+Tab, just like a browser
+vim.api.nvim_set_keymap('n', '<C-Tab>', '<Cmd>BufferLineCycleNext<CR>', {})
+vim.api.nvim_set_keymap('n', '<C-S-Tab>', '<Cmd>BufferLineCyclePrev<CR>', {})
+
 require('lualine').setup {
     options = {
         icons_enabled = true,
@@ -306,11 +306,11 @@ require('lualine').setup {
         },
         ignore_focus = {},
         always_divide_middle = true,
-        always_show_tabline = true,
+        always_show_tabline = false,
         globalstatus = false,
         refresh = {
             statusline = 1000,
-            tabline = 1000,
+            -- tabline = 1000,
             winbar = 1000,
             refresh_time = 16, -- ~60fps
             events = {
@@ -344,9 +344,7 @@ require('lualine').setup {
         lualine_y = {},
         lualine_z = {}
     },
-    tabline = {
-        lualine_c = { { 'tabs', mode = 2, max_length = 40 } }
-    },
+
     winbar = {
         lualine_a = {},
         lualine_b = {
