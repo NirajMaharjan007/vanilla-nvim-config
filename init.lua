@@ -552,6 +552,11 @@ vim.cmd.colorscheme("catppuccin")
 
 -- KEYMAPS
 --vim.keymap.set('i', 'jk', '<ESC>')
+vim.keymap.set('n', '<M-e>', vim.diagnostic.open_float)
+vim.keymap.set('n', '[d', vim.diagnostic.goto_prev)
+vim.keymap.set('n', ']d', vim.diagnostic.goto_next)
+vim.keymap.set('n', '<M-q>', vim.diagnostic.setloclist)
+
 vim.keymap.set('n', '<C-n>', ':NvimTreeToggle<CR>')
 vim.keymap.set('v', '++', '<plug>NERDCommenterToggle')
 vim.keymap.set('n', '++', '<plug>NERDCommenterToggle')
