@@ -13,6 +13,11 @@ vim.api.nvim_exec_autocmds("User", { pattern = "PluginsLoaded" })
 
 vim.call('plug#begin', '~/.vim/plugged')
 
+Plug('kevinhwang91/promise-async')
+Plug('kevinhwang91/nvim-ufo')
+
+Plug('ibhagwan/fzf-lua')
+
 Plug('neovim/nvim-lspconfig')
 Plug('hrsh7th/cmp-nvim-lsp')
 Plug('hrsh7th/cmp-buffer')
@@ -271,8 +276,91 @@ require("mason-lspconfig").setup({
 })
 
 
+local fzf = require("fzf-lua")
+
+fzf.setup({
+    winopts = {
+        width = 0.8,
+        height = 0.8,
+        border = "rounded",
+    },
+    files = {
+        prompt = "Files> ",
+    },
+    grep = {
+        prompt = "Grep> ",
+    },
+})
+
+local ufo = require("ufo")
+local ftMap = {
+    vim = 'indent',
+    python = { 'indent' },
+    git = ''
+}
+
+ufo.setup({
+    open_fold_hl_timeout = 150,
+    close_fold_kinds_for_ft = {
+        default = { 'imports', 'comment' },
+        json = { 'array' },
+        c = { 'comment', 'region' }
+    },
+    close_fold_current_line_for_ft = {
+        default = true,
+        c = false
+    },
+    preview = {
+        win_config = {
+            border = { '', '─', '', '', '', '─', '', '' },
+            winhighlight = 'Normal:Folded',
+            winblend = 0
+        },
+        mappings = {
+            scrollU = '<C-u>',
+            scrollD = '<C-d>',
+            jumpTop = '[',
+            jumpBot = ']'
+        }
+    },
+    provider_selector = function(bufnr, filetype, buftype)
+        -- if you prefer treesitter provider rather than lsp,
+        -- return ftMap[filetype] or {'treesitter', 'indent'}
+        return ftMap[filetype]
+
+        -- refer to ./doc/example.lua for detail
+    end
+})
 
 -- Keymaps
+
+vim.o.foldcolumn = '1'
+vim.o.foldlevel = 99
+vim.o.foldlevelstart = 99
+vim.o.foldenable = true
+
+vim.keymap.set('n', 'zs', 'zc', { desc = 'Fold current block' })
+vim.keymap.set('n', 'za', 'zo', { desc = 'Unfold current block' })
+vim.keymap.set('n', 'zr', ufo.closeAllFolds, { desc = 'Fold All' })
+vim.keymap.set('n', 'zm', ufo.openAllFolds, { desc = 'Unfold All' })
+vim.keymap.set('n', 'zK', ufo.closeAllFolds, { desc = 'Fold All' })
+vim.keymap.set('n', 'zk', ufo.openAllFolds, { desc = 'Unfold All' })
+
+vim.keymap.set('n', 'K', function()
+    local winid = ufo.peekFoldedLinesUnderCursor()
+    if not winid then
+        vim.lsp.buf.hover()
+    end
+end, { desc = 'Peek / Hover' })
+
+-- Basic fzf-lua keymaps
+vim.keymap.set('n', '<leader>ff', function() fzf.files() end)
+vim.keymap.set('n', '<leader>fg', function() fzf.live_grep() end)
+vim.keymap.set('n', '<leader>fb', function() fzf.buffers() end)
+vim.keymap.set('n', '<leader>fh', function() fzf.help_tags() end)
+vim.keymap.set('n', '<leader>fr', function() fzf.oldfiles() end)
+vim.keymap.set('n', '<leader>fc', function() fzf.commands() end)
+
 vim.api.nvim_create_autocmd('LspAttach', {
     callback = function(args)
         vim.keymap.set('n', 'gd', vim.lsp.buf.definition, { buffer = args.buf })
@@ -311,7 +399,9 @@ require("conform").setup({
     },
 })
 
-require("snacks").setup({
+_G.Snacks = require('snacks')
+
+Snacks.setup({
     dashboard = { enabled = false },
     bigfile = { enabled = true },
     explorer = { enabled = true },
@@ -324,6 +414,7 @@ require("snacks").setup({
     scroll = { enabled = true },
     statuscolumn = { enabled = true },
     words = { enabled = true },
+    terminal = { enabled = true }
 })
 
 require("bufferline").setup({
