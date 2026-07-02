@@ -30,6 +30,7 @@ Plug('mason-org/mason-lspconfig.nvim')
 
 Plug('windwp/nvim-autopairs')
 Plug('lewis6991/gitsigns.nvim')
+Plug('hedyhli/outline.nvim')
 
 Plug('akinsho/bufferline.nvim')
 Plug('dense-analysis/ale')
@@ -332,12 +333,20 @@ ufo.setup({
     end
 })
 
+require("outline").setup({
+    outline_window = {
+        position = 'right',
+    }
+})
+
 -- Keymaps
 
 vim.o.foldcolumn = '1'
 vim.o.foldlevel = 99
 vim.o.foldlevelstart = 99
 vim.o.foldenable = true
+
+vim.keymap.set("n", "<C-b>", "<cmd>Outline<CR>", { desc = "Toggle Outline" })
 
 vim.keymap.set('n', 'zs', 'zc', { desc = 'Fold current block' })
 vim.keymap.set('n', 'za', 'zo', { desc = 'Unfold current block' })
