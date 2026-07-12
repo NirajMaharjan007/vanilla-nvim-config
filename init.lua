@@ -203,12 +203,7 @@ cmp.setup.cmdline(':', {
     matching = { disallow_symbol_nonprefix_matching = false }
 })
 
--- Set up lspconfig.
-local capabilities = require('cmp_nvim_lsp').default_capabilities()
--- Replace <YOUR_LSP_SERVER> with each lsp server you've enabled.
-vim.lsp.config('<YOUR_LSP_SERVER>', {
-    capabilities = capabilities
-})
+
 
 require('telescope').setup({
     defaults = {
@@ -243,6 +238,19 @@ vim.lsp.config('lua_ls', {
     }
 })
 
+local navic = require("nvim-navic")
+
+vim.lsp.config('omnisharp', {
+    cmd = { "omnisharp" },
+    on_attach = function(client, bufnr)
+        client.server_capabilities.documentSymbolProvider = true
+        navic.attach(client, bufnr)
+    end,
+    enable_roslyn_analyzers = true,
+    organize_imports_on_format = true,
+    enable_import_completion = true,
+})
+
 vim.lsp.config('pyright', {
     cmd = { 'pyright-langserver', '--stdio' },
     filetypes = { 'python' }
@@ -266,13 +274,13 @@ vim.lsp.config('csharp-ls', {
 })
 
 vim.lsp.enable('csharp-ls')
-
+vim.lsp.enable('omnisharp')
 vim.lsp.enable('pyright')
 vim.lsp.enable('lua_ls')
 
 require("mason-lspconfig").setup({
     -- List of language servers you want automatically installed
-    ensure_installed = { "lua_ls", "ts_ls", "pyright" },
+    ensure_installed = { "lua_ls", "ts_ls", "pyright", "omnisharp" },
     automatic_installation = true, -- Installs servers when you open a matching file
 })
 
@@ -376,18 +384,6 @@ vim.api.nvim_create_autocmd('LspAttach', {
         vim.keymap.set('n', 'K', vim.lsp.buf.hover, { buffer = args.buf })
         vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, { buffer = args.buf })
         local client = vim.lsp.get_client_by_id(args.data.client_id)
-        if client then
-            -- Attach navic to get breadcrumbs
-            require('nvim-navic').attach(client, args.buf)
-
-            -- Optional: Update breadcrumbs on cursor move
-            vim.api.nvim_create_autocmd('CursorMoved', {
-                buffer = args.buf,
-                callback = function()
-                    vim.cmd('redrawstatus') -- Refresh winbar on cursor move
-                end
-            })
-        end
     end
 })
 
